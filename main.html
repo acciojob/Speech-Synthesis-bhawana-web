@@ -1,43 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Speech Synthesis</title>
-  <link href='https://fonts.googleapis.com/css?family=Pacifico' rel='stylesheet' type='text/css'>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text to Speech Application</title>
 </head>
 <body>
 
-    <div class="voiceinator">
+    <h1>Text to Speech Application</h1>
 
-      <h1>The Voiceinator 5000</h1>
+    <!-- Text box to input the text -->
+    <textarea id="text-to-speak" rows="10" cols="30"></textarea><br>
 
-      <select name="voice" id="voices">
-        <option value="">Select A Voice</option>
-      </select>
+    <!-- Dropdown for selecting voice -->
+    <select id="voice-select"></select><br>
 
-      <label for="rate">Rate:</label>
-      <input name="rate" type="range" min="0" max="3" value="1" step="0.1">
+    <!-- Rate control -->
+    <label for="rate">Rate: </label>
+    <input type="range" id="rate" min="0.1" max="2" value="1" step="0.1">
+    <span id="rate-value">1</span><br>
 
-      <label for="pitch">Pitch:</label>
+    <!-- Pitch control -->
+    <label for="pitch">Pitch: </label>
+    <input type="range" id="pitch" min="0" max="2" value="1" step="0.1">
+    <span id="pitch-value">1</span><br>
 
-      <input name="pitch" type="range" min="0" max="2" step="0.1">
-      <textarea name="text">Hello! I love JavaScript 👍</textarea>
-      <button id="stop">Stop!</button>
-      <button id="speak">Speak</button>
+    <!-- Start and Stop buttons -->
+    <button id="start-btn">Start</button>
+    <button id="stop-btn">Stop</button>
 
-    </div>
+    <script>
+        // Store global variables
+        let synth = window.speechSynthesis;
+        let voices = [];
+        let currentUtterance = null;
 
-<script>
-  const msg = new SpeechSynthesisUtterance();
-  let voices = [];
-  const voicesDropdown = document.querySelector('[name="voice"]');
-  const options = document.querySelectorAll('[type="range"], [name="text"]');
-  const speakButton = document.querySelector('#speak');
-  const stopButton = document.querySelector('#stop');
+        // Get elements from the DOM
+        const textBox = document.getElementById('text-to-speak');
+        const voiceSelect = document.getElementById('voice-select');
+        const rateSlider = document.getElementById('rate');
+        const pitchSlider = document.getElementById('pitch');
+        const rateValue = document.getElementById('rate-value');
+        const pitchValue = document.getElementById('pitch-value');
+        const startBtn = document.getElementById('start-btn');
+        const stopBtn = document.getElementById('stop-btn');
 
-  //Your code goes here
-</script>
+        // Populate the voice dropdown list
+        function populateVoiceList() {
+            voices = synth.getVoices();
+            voiceSelect.innerHTML = '';
+            voices.forEach(voice => {
+                const option = document.createElement('option');
+                option.textContent = voice.name;
+                option.setAttribute('data-lang', voice.lang);
+                voiceSelect.appendChild(option);
+            });
+        }
+
+        // Update rate and pitch values
+        rateSlider.addEventListener('input', () => {
+            rateValue.textContent = rateSlider.value;
+            if (currentUtterance) {
+                currentUtterance.rate = rateSlider.value;
+            }
+        });
+
+        pitchSlider.addEventListener('input', () => {
+            pitchValue.textContent = pitchSlider.value;
+            if (currentUtterance) {
+                currentUtterance.pitch = pitchSlider.value;
+            }
+        });
+
+        // Start speaking when the "Start" button is clicked
+        startBtn.addEventListener('click', () => {
+            if (textBox.value.trim() !== "") {
+                const utterance = new SpeechSynthesisUtterance(textBox.value);
+                const selectedVoice = voices[voiceSelect.selectedIndex];
+                utterance.voice = selectedVoice;
+                utterance.rate = rateSlider.value;
+                utterance.pitch = pitchSlider.value;
+
+                // Store the current utterance so we can modify it later
+                currentUtterance = utterance;
+
+                // Speak the utterance
+                synth.speak(utterance);
+            }
+        });
+
+        // Stop speaking when the "Stop" button is clicked
+        stopBtn.addEventListener('click', () => {
+            synth.cancel();
+        });
+
+        // Listen for voices to be loaded and populate the voice dropdown
+        window.speechSynthesis.onvoiceschanged = populateVoiceList;
+
+        // Initial population of voices
+        populateVoiceList();
+    </script>
 
 </body>
 </html>
